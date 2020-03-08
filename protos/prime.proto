@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package prime;
+
+service PrimeService {
+    rpc Prime (PrimeRequest) returns (stream PrimeResponse) {};
+}
+
+message PrimeRequest {
+    int32 number = 1;
+}
+
+message PrimeResponse {
+    int32 result = 1;
+}

@@ -4,6 +4,9 @@ var greets = require('../server/protos/greet_pb');
 var sumService = require('../server/protos/sum_grpc_pb');
 var sums = require('../server/protos/sum_pb');
 
+var primeService = require('../server/protos/prime_grpc_pb');
+var prime = require('../server/protos/prime_pb');
+
 var grpc = require('grpc');
 
 let unsafCreds = grpc.credentials.createInsecure();
@@ -33,6 +36,8 @@ function main() {
   });
 
   sum();
+  greetManyTimes();
+  calculatePrime();
 }
 
 function sum() {
@@ -53,6 +58,71 @@ function sum() {
     } else {
       console.error(error);
     }
+  });
+}
+
+function calculatePrime() {
+  let client = new primeService.PrimeServiceClient(
+    'localhost:50051',
+    unsafCreds
+  );
+
+  // let number = new prime.Number();
+
+  let request = new prime.PrimeRequest();
+  request.setNumber(15);
+
+  let call = client.prime(request, () => {});
+
+  call.on('data', response => {
+    console.log('Client stream response: ', response.getResult());
+  });
+
+  //control the call
+  call.on('status', status => {
+    console.log('Status: ', status);
+  });
+
+  call.on('error', error => {
+    console.error(error);
+  });
+
+  call.on('end', () => {
+    console.log('Streaming ended');
+  });
+}
+
+function greetManyTimes() {
+  let client = new service.GreetServiceClient('localhost:50051', unsafCreds);
+
+  //create request
+
+  let request = new greets.GreetManyTimesRequest();
+
+  //create the protocol buffer
+  var greeting = new greets.Greeting();
+  greeting.setFirstName('Miller');
+  greeting.setLastName('Oliveira');
+
+  request.setGreeting(greeting);
+
+  //crate a call
+  let call = client.greetManyTimes(request, () => {});
+  call.on('data', response => {
+    console.log('Client stream response: ', response.getResult());
+  });
+
+  //control the call
+  call.on('status', status => {
+    console.log('Status: ', status);
+  });
+
+  call.on('error', error => {
+    console.error(error);
+  });
+
+  call.on('end', () => {
+    console.log('Streaming ended');
   });
 }
 
